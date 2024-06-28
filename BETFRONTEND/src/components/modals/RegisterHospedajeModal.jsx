@@ -1,145 +1,259 @@
 import React, { useState, useEffect } from 'react';
-import Modal from 'react-modal';
 import { useHospedaje } from '../../context/HospedajeContext';
 import { useClients } from '../../context/ClientsContext';
+import { usePatients } from '../../context/PatientContext';
 
-Modal.setAppElement('#root'); // Esto es importante para accesibilidad
+const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje }) => {
+  const initialFormData = {
+    patient_id: '',
+    client_id: '',
+    start_date: '',
+    end_date: '',
+    cost: '',
+    notes: '',
+  };
 
-const RegisterHospedajeModal = ({ isOpen, onClose }) => {
-  const { addHospedaje } = useHospedaje();
-  const { clients, fetchClients } = useClients();
-
+  const [formData, setFormData] = useState(initialFormData);
+  const [searchClientTerm, setSearchClientTerm] = useState('');
+  const [searchPatientTerm, setSearchPatientTerm] = useState('');
   const [filteredClients, setFilteredClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState('');
-  const [selectedPet, setSelectedPet] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [cost, setCost] = useState('');
-  const [notes, setNotes] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [clientsLoaded, setClientsLoaded] = useState(false);
+  const [patientsLoaded, setPatientsLoaded] = useState(false);
+
+  const { addHospedaje, updateHospedaje } = useHospedaje();
+  const { clients, fetchClients } = useClients();
+  const { patients, fetchPatients } = usePatients();
 
   useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
+    if (isOpen) {
+      fetchClients().then(() => setClientsLoaded(true));
+      fetchPatients().then(() => setPatientsLoaded(true));
+    }
+  }, [isOpen, fetchClients, fetchPatients]);
 
   useEffect(() => {
-    console.log('Clients:', clients); // Verifica los datos obtenidos
-    if (searchTerm) {
-      const results = clients.filter(client => {
-        console.log('Client:', client);
-        return client.client_name && client.client_name.toLowerCase().includes(searchTerm.toLowerCase());
-      });
-      console.log('Filtered Results:', results); // Verifica los resultados filtrados
-      setFilteredClients(results);
+    if (isOpen && clientsLoaded && patientsLoaded) {
+      if (hospedaje) {
+        const selectedClient = clients.find(client => client.id === hospedaje.client_id);
+        const selectedPatient = patients.find(patient => patient.id === hospedaje.patient_id);
+        const clientSearchTerm = selectedClient ? `${selectedClient.name} (${selectedClient.id})` : '';
+        const patientSearchTerm = selectedPatient ? `${selectedPatient.name} (${selectedPatient.id})` : '';
+
+        setFormData({
+          patient_id: hospedaje.patient_id,
+          client_id: hospedaje.client_id,
+          start_date: new Date(hospedaje.start_date).toISOString().split('T')[0],
+          end_date: new Date(hospedaje.end_date).toISOString().split('T')[0],
+          cost: hospedaje.cost,
+          notes: hospedaje.notes,
+        });
+        setSearchClientTerm(clientSearchTerm);
+        setSearchPatientTerm(patientSearchTerm);
+      } else {
+        setFormData(initialFormData);
+        setSearchClientTerm('');
+        setSearchPatientTerm('');
+      }
+    }
+  }, [isOpen, clientsLoaded, patientsLoaded, hospedaje, clients, patients]);
+
+  useEffect(() => {
+    if (searchClientTerm && !hospedaje) {
+      const filtered = clients.filter(client =>
+        `${client.name} ${client.id}`.toLowerCase().includes(searchClientTerm.toLowerCase())
+      );
+      setFilteredClients(filtered);
     } else {
       setFilteredClients([]);
     }
-  }, [searchTerm, clients]);
+  }, [searchClientTerm, clients, hospedaje]);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (searchPatientTerm && !hospedaje) {
+      const filtered = patients.filter(patient =>
+        `${patient.name} ${patient.id}`.toLowerCase().includes(searchPatientTerm.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients([]);
+    }
+  }, [searchPatientTerm, patients, hospedaje]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const hospedaje = {
-      patient_id: selectedPet,
-      start_date: startDate,
-      end_date: endDate,
-      cost: cost,
-      notes: notes,
-    };
-    addHospedaje(hospedaje);
-    onClose();
+    try {
+      const formattedData = {
+        ...formData,
+        start_date: new Date(formData.start_date).toISOString(),
+        end_date: new Date(formData.end_date).toISOString(),
+      };
+
+      if (hospedaje) {
+        await updateHospedaje(hospedaje.id, formattedData);
+      } else {
+        await addHospedaje(formattedData);
+      }
+
+      onRegisterSuccess();
+      setFormData(initialFormData);
+      onClose();
+    } catch (error) {
+      console.error('Error al registrar el hospedaje:', error);
+    }
   };
 
-  const handleClientSelect = (client) => {
-    setSelectedClient(client.client_id);
+  const handleSelectClient = (client) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      client_id: client.id,
+    }));
+    setSearchClientTerm(`${client.name} (${client.id})`);
     setFilteredClients([]);
-    setSearchTerm(client.client_name);
   };
+
+  const handleSelectPatient = (patient) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      patient_id: patient.id,
+    }));
+    setSearchPatientTerm(`${patient.name} (${patient.id})`);
+    setFilteredPatients([]);
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
-      contentLabel="Registrar Hospedaje"
-      style={{
-        content: {
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          right: 'auto',
-          bottom: 'auto',
-          marginRight: '-50%',
-          transform: 'translate(-50%, -50%)',
-          width: '500px',
-          background: '#fff',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 5px 15px rgba(0,0,0,.5)'
-        },
-        overlay: {
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          backgroundColor: 'rgba(0,0,0,0.5)'
-        }
-      }}
-    >
-      <h2 style={{ marginBottom: '20px', fontSize: '1.5em' }}>Registrar Hospedaje</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
-        <label>
-          Cliente:
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar cliente"
-            style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
-          />
-          {filteredClients.length > 0 && (
-            <ul style={{ listStyle: 'none', padding: '0', margin: '0', border: '1px solid #ccc', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
-              {filteredClients.map(client => (
-                <li key={client.client_id} onClick={() => handleClientSelect(client)} style={{ padding: '8px', cursor: 'pointer' }}>
-                  {client.client_name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </label>
-        <label>
-          Mascota:
-          <select value={selectedPet} onChange={(e) => setSelectedPet(e.target.value)} disabled={!selectedClient} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
-            <option value="">Seleccione una mascota</option>
-            {selectedClient && clients.find(client => client.client_id === selectedClient).pets.map(pet => (
-              <option key={pet.pet_id} value={pet.pet_id}>
-                {pet.pet_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Fecha de Ingreso:
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
-        </label>
-        <label>
-          Fecha de Retiro:
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
-        </label>
-        <label>
-          Costo:
-          <input type="number" value={cost} onChange={(e) => setCost(e.target.value)} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }} />
-        </label>
-        <label>
-          Notas:
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px' }}></textarea>
-        </label>
-        <button type="submit" style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer', borderRadius: '4px' }}>Registrar</button>
-      </form>
-    </Modal>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-3xl">
+        <h2 className="text-2xl mb-4">{hospedaje ? 'Editar Hospedaje' : 'Registrar Hospedaje'}</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="relative mb-4">
+            <label className="block text-gray-700">Buscar Cliente</label>
+            <input
+              type="text"
+              name="searchClientTerm"
+              value={searchClientTerm}
+              onChange={(e) => setSearchClientTerm(e.target.value)}
+              className="border border-gray-300 rounded px-4 py-2 w-full"
+              disabled={!!hospedaje}
+            />
+            {searchClientTerm && !hospedaje && (
+              <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 max-h-48 overflow-y-auto w-full">
+                {filteredClients.map(client => (
+                  <div
+                    key={client.id}
+                    className="p-2 hover:bg-gray-200 cursor-pointer"
+                    onClick={() => handleSelectClient(client)}
+                  >
+                    {`${client.name} (${client.id})`}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="relative mb-4">
+            <label className="block text-gray-700">Buscar Paciente</label>
+            <input
+              type="text"
+              name="searchPatientTerm"
+              value={searchPatientTerm}
+              onChange={(e) => setSearchPatientTerm(e.target.value)}
+              className="border border-gray-300 rounded px-4 py-2 w-full"
+              disabled={!!hospedaje}
+            />
+            {searchPatientTerm && !hospedaje && (
+              <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 max-h-48 overflow-y-auto w-full">
+                {filteredPatients.map(patient => (
+                  <div
+                    key={patient.id}
+                    className="p-2 hover:bg-gray-200 cursor-pointer"
+                    onClick={() => handleSelectPatient(patient)}
+                  >
+                    {`${patient.name} (${patient.id})`}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-gray-700">Fecha de Ingreso</label>
+              <input
+                type="date"
+                name="start_date"
+                value={formData.start_date}
+                onChange={handleChange}
+                className="border border-gray-300 rounded px-4 py-2 w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700">Fecha de Salida</label>
+              <input
+                type="date"
+                name="end_date"
+                value={formData.end_date}
+                onChange={handleChange}
+                className="border border-gray-300 rounded px-4 py-2 w-full"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-gray-700">Costo</label>
+              <input
+                type="number"
+                name="cost"
+                value={formData.cost}
+                onChange={handleChange}
+                className="border border-gray-300 rounded px-4 py-2 w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700">Notas</label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className="border border-gray-300 rounded px-4 py-2 w-full"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700 mr-2"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              {hospedaje ? 'Guardar Cambios' : 'Registrar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 
 export default RegisterHospedajeModal;
+
 
 
 
