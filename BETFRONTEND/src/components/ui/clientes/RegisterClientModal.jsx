@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { createClientRequest } from '../../../api/clients.api';
+import React, { useState, useEffect } from 'react';
+import { createClientRequest, updateClientRequest } from '../../../api/clients.api';
 import { CSSTransition } from 'react-transition-group';
 import { FaSpinner } from 'react-icons/fa';
 
-const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess }) => {
+const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess, client }) => {
   const [formData, setFormData] = useState({
     cedula: '',
     full_name: '',
@@ -12,6 +12,26 @@ const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess }) => {
     email: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (client) {
+      setFormData({
+        cedula: client.cedula,
+        full_name: client.client_name,
+        phone: client.phone,
+        address: client.address,
+        email: client.email,
+      });
+    } else {
+      setFormData({
+        cedula: '',
+        full_name: '',
+        phone: '',
+        address: '',
+        email: '',
+      });
+    }
+  }, [client]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,8 +44,13 @@ const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess }) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await createClientRequest(formData);
-      onRegisterSuccess();
+      if (client) {
+        await updateClientRequest(client.client_id, formData);
+        onRegisterSuccess('Cliente actualizado con éxito.');
+      } else {
+        await createClientRequest(formData);
+        onRegisterSuccess('Cliente registrado con éxito.');
+      }
       onClose(); // Cerrar el modal después de registrar
     } catch (error) {
       console.error('Error registrando propietario:', error);
@@ -40,7 +65,7 @@ const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess }) => {
     <CSSTransition in={isOpen} timeout={300} classNames="modal" unmountOnExit>
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div className="bg-white p-8 rounded-lg shadow-lg w-3/4 md:w-1/2">
-          <h2 className="text-3xl font-bold mb-6 text-center">Registrar Propietario</h2>
+          <h2 className="text-3xl font-bold mb-6 text-center">{client ? 'Editar Cliente' : 'Registrar Cliente'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-gray-700 font-semibold">Cédula</label>
@@ -123,7 +148,7 @@ const RegisterClientModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   </>
                 ) : (
                   <>
-                    Guardar <i className="ml-2">💾</i>
+                    {client ? 'Actualizar' : 'Guardar'} <i className="ml-2">💾</i>
                   </>
                 )}
               </button>

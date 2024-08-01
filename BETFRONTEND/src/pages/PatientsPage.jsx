@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePatients } from '../context/PatientContext';
-import { FaPlus, FaEllipsisV, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaPlus, FaEllipsisV, FaChevronLeft, FaChevronRight, FaEdit, FaUser, FaTrash } from 'react-icons/fa';
 import PetsForm from '../pages/PetsForm';
 import ContainerPatient from '../components/ui/clientes/ContainerPatient';
 import PetsModal from '../components/modals/PetsModal';
@@ -14,22 +14,43 @@ const PatientsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [patientsPerPage, setPatientsPerPage] = useState(10);
   const [isDeletedModalOpen, setIsDeletedModalOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState(null);
   const navigate = useNavigate();
+  const dropdownRefs = useRef([]);
 
   useEffect(() => {
     fetchPatients();
   }, [fetchPatients]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRefs.current) {
+        dropdownRefs.current.forEach((ref, index) => {
+          if (ref && !ref.contains(event.target)) {
+            setIsDropdownOpen((prev) => (prev === index ? null : prev));
+          }
+        });
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleRegisterSuccess = () => {
     fetchPatients();
     closeModal();
   };
 
-  const openModal = () => {
+  const openModal = (patient = null) => {
+    setPatientToEdit(patient);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setPatientToEdit(null);
     setIsModalOpen(false);
   };
 
@@ -40,12 +61,8 @@ const PatientsPage = () => {
     }, 3000);
   };
 
-  const toggleDropdown = (id) => {
-    if (isDropdownOpen === id) {
-      setIsDropdownOpen(null);
-    } else {
-      setIsDropdownOpen(id);
-    }
+  const toggleDropdown = (index) => {
+    setIsDropdownOpen((prev) => (prev === index ? null : index));
   };
 
   const handleSearchChange = (e) => {
@@ -91,7 +108,7 @@ const PatientsPage = () => {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Lista de Pacientes</h1>
         <button
-          onClick={openModal}
+          onClick={() => openModal()}
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
         >
           <FaPlus className="mr-2" /> Registrar Paciente
@@ -171,7 +188,7 @@ const PatientsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {currentPatients.map((patient) => (
+              {currentPatients.map((patient, index) => (
                 <tr key={patient.id} className="hover:bg-gray-100">
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                     {patient.name}
@@ -201,29 +218,38 @@ const PatientsPage = () => {
                     {patient.client_name || 'Sin propietario'}
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    <div className="flex items-center justify-end">
+                    <div className="relative" ref={(el) => (dropdownRefs.current[index] = el)}>
                       <button
-                        onClick={() => toggleDropdown(patient.id)}
+                        onClick={() => toggleDropdown(index)}
                         className="text-gray-600 hover:text-gray-900 focus:outline-none mr-3"
                       >
                         <FaEllipsisV />
                       </button>
-                      {isDropdownOpen === patient.id && (
-                        <div className="relative">
-                          <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg">
-                            <button
+                      {isDropdownOpen === index && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
+                          <ul>
+                            <li
+                              className="flex items-center px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                               onClick={() => handleViewProfile(patient.id)}
-                              className="block px-4 py-2 text-gray-800 hover:bg-gray-100 w-full text-left"
                             >
+                              <FaUser className="mr-2" />
                               Ver Perfil
-                            </button>
-                            <button
-                              onClick={() => handleDeletePatient(patient.id)}
-                              className="block px-4 py-2 text-gray-800 hover:bg-gray-100 w-full text-left"
+                            </li>
+                            <li
+                              onClick={() => openModal(patient)}
+                              className="flex items-center px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                             >
+                              <FaEdit className="mr-2" />
+                              Editar
+                            </li>
+                            <li
+                              onClick={() => handleDeletePatient(patient.id)}
+                              className="flex items-center px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
+                            >
+                              <FaTrash className="mr-2" />
                               Eliminar
-                            </button>
-                          </div>
+                            </li>
+                          </ul>
                         </div>
                       )}
                     </div>
@@ -235,7 +261,7 @@ const PatientsPage = () => {
         </div>
       </div>
       <PetsModal isOpen={isModalOpen} onClose={closeModal}>
-        <PetsForm onClose={closeModal} onRegisterSuccess={handleRegisterSuccess} clientId={1} />
+        <PetsForm onClose={closeModal} onRegisterSuccess={handleRegisterSuccess} clientId={patientToEdit ? patientToEdit.client_id : 1} patientId={patientToEdit ? patientToEdit.id : null} />
       </PetsModal>
       {isDeletedModalOpen && (
         <div className="fixed bottom-0 right-0 mb-4 mr-4 bg-green-500 text-white p-4 rounded">
@@ -247,3 +273,8 @@ const PatientsPage = () => {
 };
 
 export default PatientsPage;
+
+
+
+
+

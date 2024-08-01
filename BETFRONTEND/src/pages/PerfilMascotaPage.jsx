@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPatientRequest, deletePatientRequest } from '../api/patients.api';
+import PetsModal from '../components/modals/PetsModal';
+import PetsForm from '../pages/PetsForm';
 
 const PerfilMascotaPage = () => {
   const { id } = useParams(); // `id` es el `petId`
   const navigate = useNavigate();
   const [pet, setPet] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState(null);
 
   useEffect(() => {
     const fetchPet = async () => {
@@ -33,6 +37,22 @@ const PerfilMascotaPage = () => {
     navigate(`/veterinario/patients/${id}/certificado`);
   };
 
+  const openModal = () => {
+    setPatientToEdit(pet);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setPatientToEdit(null);
+  };
+
+  const handleRegisterSuccess = async () => {
+    const response = await getPatientRequest(id);
+    setPet(response.data);
+    closeModal();
+  };
+
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
     return new Date(dateString).toLocaleDateString('es-ES', options);
@@ -45,13 +65,6 @@ const PerfilMascotaPage = () => {
   return (
     <div className="container mx-auto p-4 flex justify-center">
       <div className="w-full max-w-sm p-4 bg-white shadow-md rounded-lg">
-        <div className="flex justify-center mb-4">
-          <img
-            src="https://via.placeholder.com/150" // Reemplaza con la URL de la imagen del perfil de la mascota
-            alt="Perfil de la Mascota"
-            className="w-24 h-24 rounded-full"
-          />
-        </div>
         <h2 className="text-center text-2xl font-bold mb-4">INFORMACIÓN PERSONAL</h2>
         <div className="mb-4">
           <p><strong>Nombre:</strong> {pet.name}</p>
@@ -65,7 +78,7 @@ const PerfilMascotaPage = () => {
         </div>
         <div className="flex justify-between mt-4">
           <button
-            onClick={() => navigate(`/veterinario/patients/edit/${id}`)}
+            onClick={openModal}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Editar
@@ -84,6 +97,10 @@ const PerfilMascotaPage = () => {
           </button>
         </div>
       </div>
+
+      <PetsModal isOpen={isModalOpen} onClose={closeModal}>
+        <PetsForm onClose={closeModal} onRegisterSuccess={handleRegisterSuccess} clientId={pet.client_id} patientId={pet.id} />
+      </PetsModal>
     </div>
   );
 };

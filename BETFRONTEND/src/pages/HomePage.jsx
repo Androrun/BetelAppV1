@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React, { useState, useEffect } from 'react';
 import {
   FaStethoscope,
@@ -9,6 +8,7 @@ import {
   FaHospitalAlt,
   FaDog
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import ReusableModal from '../components/modals/ReusableModal';
 import SearchModal from '../components/modals/SearchModal';
 import PreHospitalizacionModal from '../components/modals/PreHospitalizacionModal';
@@ -21,19 +21,16 @@ const HomePage = () => {
   const [isPreHospModalOpen, setIsPreHospModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedPet, setSelectedPet] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
   const sections = [
-    { name: 'Consulta Médica', icon: <FaStethoscope />, color: 'bg-pink-400' },
-    { name: 'Exámenes', icon: <FaMicroscope />, color: 'bg-yellow-400' },
-    { name: 'Vacunación', icon: <FaSyringe />, color: 'bg-teal-400' },
-    { name: 'Desparasitacion', icon: <FaPills />, color: 'bg-green-400' },
-    { name: 'Hospedaje', icon: <FaHome />, color: 'bg-blue-400' },
+    { name: 'Hospedaje', icon: <FaHome />, color: 'bg-blue-400', onClick: () => navigate('/veterinario/hospedaje') },
     { name: 'Hospitalización', icon: <FaHospitalAlt />, color: 'bg-yellow-400', onClick: () => setIsModalOpen(true) },
-    { name: 'Certificado Médico', icon: <FaDog />, color: 'bg-green-400' },
+    { name: 'Certificado Médico', icon: <FaDog />, color: 'bg-green-400', onClick: () => navigate('/veterinario/patients/:id/certificado') },
   ];
 
   const closeModal = () => {
@@ -119,3 +116,5 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
+

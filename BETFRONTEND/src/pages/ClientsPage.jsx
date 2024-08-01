@@ -5,7 +5,7 @@ import { FaPlus, FaEllipsisV, FaUser, FaTrash, FaChevronLeft, FaChevronRight, Fa
 import RegisterClientModal from '../components/ui/clientes/RegisterClientModal';
 import ContainerClient from '../components/ui/clientes/ContainerClient';
 import ReusableModal from '../components/modals/ReusableModal';
-import SuccessMessage from '../components/ui/SuccessMessage'; // Importa el componente de mensaje de éxito
+import SuccessMessage from '../components/ui/SuccessMessage';
 
 const ClientsPage = () => {
   const { clients, fetchClients, deleteClient } = useClients();
@@ -19,12 +19,30 @@ const ClientsPage = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
   const [isMessageVisible, setIsMessageVisible] = useState(false);
-  const messageRef = useRef(null); // Crear ref para SuccessMessage
+  const messageRef = useRef(null);
   const navigate = useNavigate();
+  const dropdownRefs = useRef([]);
 
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRefs.current) {
+        dropdownRefs.current.forEach((ref, index) => {
+          if (ref && !ref.contains(event.target)) {
+            setIsDropdownOpen((prev) => (prev === index ? null : prev));
+          }
+        });
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleRegisterSuccess = () => {
     fetchClients();
@@ -33,7 +51,7 @@ const ClientsPage = () => {
     setIsMessageVisible(true);
     setTimeout(() => {
       setIsMessageVisible(false);
-    }, 3000); // Oculta el mensaje después de 3 segundos
+    }, 3000);
   };
 
   const openModal = (client = null) => {
@@ -61,22 +79,18 @@ const ClientsPage = () => {
     }
   };
 
-  const toggleDropdown = (id) => {
-    if (isDropdownOpen === id) {
-      setIsDropdownOpen(null);
-    } else {
-      setIsDropdownOpen(id);
-    }
+  const toggleDropdown = (index) => {
+    setIsDropdownOpen((prev) => (prev === index ? null : index));
   };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const handleClientsPerPageChange = (event) => {
     setClientsPerPage(Number(event.target.value));
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
   };
 
   const filteredClients = clients.filter(
@@ -175,7 +189,7 @@ const ClientsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {currentClients.map((client) => (
+              {currentClients.map((client, index) => (
                 <React.Fragment key={client.client_id}>
                   <tr className="hover:bg-gray-100">
                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
@@ -200,15 +214,15 @@ const ClientsPage = () => {
                     </td>
                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                       {client.pets.length > 0 && (
-                        <div className="relative">
+                        <div className="relative" ref={(el) => (dropdownRefs.current[index] = el)}>
                           <button
-                            onClick={() => toggleDropdown(client.client_id)}
+                            onClick={() => toggleDropdown(index)}
                             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center"
                           >
                             {client.pets[0].name}
                             {client.pets.length > 1 && <FaEllipsisV className="ml-2" />}
                           </button>
-                          {isDropdownOpen === client.client_id && client.pets.length > 1 && (
+                          {isDropdownOpen === index && client.pets.length > 1 && (
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
                               <ul>
                                 {client.pets.slice(1).map((pet) => (
@@ -229,14 +243,14 @@ const ClientsPage = () => {
                       {new Date(client.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                      <div className="relative">
+                      <div className="relative" ref={(el) => (dropdownRefs.current[index] = el)}>
                         <button
-                          onClick={() => toggleDropdown(client.client_id)}
+                          onClick={() => toggleDropdown(index)}
                           className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700 flex items-center"
                         >
                           <FaEllipsisV />
                         </button>
-                        {isDropdownOpen === client.client_id && (
+                        {isDropdownOpen === index && (
                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
                             <ul>
                               <li
@@ -315,3 +329,4 @@ const ClientsPage = () => {
 };
 
 export default ClientsPage;
+

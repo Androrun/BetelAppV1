@@ -12,7 +12,6 @@ const HospedajeRegistroPage = () => {
   const [selectedPet, setSelectedPet] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [cost, setCost] = useState('');
   const [notes, setNotes] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -38,7 +37,6 @@ const HospedajeRegistroPage = () => {
       patient_id: selectedPet,
       start_date: startDate,
       end_date: endDate,
-      cost: parseFloat(cost), // Asegúrate de enviar un número
       notes: notes,
     };
 
@@ -137,18 +135,6 @@ const HospedajeRegistroPage = () => {
             />
           </div>
           <div>
-            <label htmlFor="cost" className="block text-lg font-medium text-gray-700">
-              Costo
-            </label>
-            <input
-              type="number"
-              id="cost"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            />
-          </div>
-          <div>
             <label htmlFor="notes" className="block text-lg font-medium text-gray-700">
               Notas
             </label>
@@ -174,5 +160,6 @@ const HospedajeRegistroPage = () => {
 };
 
 export default HospedajeRegistroPage;
+
 
 

@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getClientRequest } from '../api/clients.api';
-import { getAllPatientsRequest, createPatientRequest } from '../api/patients.api';
+import { getAllPatientsRequest } from '../api/patients.api';
 import PetsForm from './PetsForm';
+import PetsModal from '../components/modals/PetsModal';
+import RegisterClientModal from '../components/ui/clientes/RegisterClientModal';
 
 const CreatePetPage = () => {
   const { id } = useParams(); // `id` es el `clientId`
   const navigate = useNavigate();
   const [client, setClient] = useState(null);
   const [patients, setPatients] = useState([]);
-  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [isPetModalOpen, setIsPetModalOpen] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -39,11 +42,28 @@ const CreatePetPage = () => {
     const response = await getAllPatientsRequest();
     const clientPatients = response.data.filter(patient => patient.client_id === parseInt(id));
     setPatients(clientPatients);
-    setIsFormVisible(false);
+    closePetModal();
   };
 
-  const toggleFormVisibility = () => {
-    setIsFormVisible(!isFormVisible);
+  const handleClientUpdateSuccess = async (updatedClient) => {
+    setClient(updatedClient);
+    closeClientModal();
+  };
+
+  const openPetModal = () => {
+    setIsPetModalOpen(true);
+  };
+
+  const closePetModal = () => {
+    setIsPetModalOpen(false);
+  };
+
+  const openClientModal = () => {
+    setIsClientModalOpen(true);
+  };
+
+  const closeClientModal = () => {
+    setIsClientModalOpen(false);
   };
 
   if (!client) {
@@ -53,26 +73,16 @@ const CreatePetPage = () => {
   return (
     <div className="container mx-auto p-4 flex flex-col md:flex-row gap-4">
       <div className="md:w-1/3 p-4 bg-white shadow-md rounded-lg">
-        <div className="flex justify-center mb-4">
-          <img
-            src="https://via.placeholder.com/150" // Replace with client's profile image URL
-            alt="Client Profile"
-            className="w-24 h-24 rounded-full"
-          />
-        </div>
         <h2 className="text-center text-2xl font-bold mb-4">INFORMACIÓN PERSONAL</h2>
         <div className="mb-4">
-          <p><strong>Nombre:</strong> {client.full_name}</p>
+          <p><strong>Nombre:</strong> {client.client_name}</p>
           <p><strong>Cédula:</strong> {client.cedula}</p>
           <p><strong>Celular:</strong> <a href={`tel:${client.phone}`} className="text-blue-500">{client.phone}</a></p>
           <p><strong>Email:</strong> <a href={`mailto:${client.email}`} className="text-blue-500">{client.email}</a></p>
-          <p><strong>Profesión:</strong> {client.profession}</p>
           <p><strong>Dirección:</strong> {client.address}</p>
-          <p><strong>Barrio:</strong> {client.neighborhood}</p>
-          <p><strong>Ciudad:</strong> {client.city}</p>
         </div>
         <div className="flex justify-between mt-4">
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700">
+          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700" onClick={openClientModal}>
             Editar
           </button>
           <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700">
@@ -85,7 +95,7 @@ const CreatePetPage = () => {
           <h2 className="text-2xl font-bold">Pacientes</h2>
           <button 
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
-            onClick={toggleFormVisibility}
+            onClick={openPetModal}
           >
             + Nuevo Paciente
           </button>
@@ -107,7 +117,7 @@ const CreatePetPage = () => {
                   Peso
                 </th>
                 <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Fecha de Creación
+                  Género
                 </th>
               </tr>
             </thead>
@@ -127,7 +137,7 @@ const CreatePetPage = () => {
                     {patient.weight} kg
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                    {new Date(patient.created_at).toLocaleDateString()}
+                    {patient.gender}
                   </td>
                 </tr>
               ))}
@@ -136,11 +146,25 @@ const CreatePetPage = () => {
         </div>
       </div>
 
-      {isFormVisible && (
-        <PetsForm onClose={toggleFormVisibility} onRegisterSuccess={handleRegisterSuccess} clientId={id} />
-      )}
+      <PetsModal isOpen={isPetModalOpen} onClose={closePetModal}>
+        <PetsForm onClose={closePetModal} onRegisterSuccess={handleRegisterSuccess} clientId={id} />
+      </PetsModal>
+
+      <PetsModal isOpen={isClientModalOpen} onClose={closeClientModal}>
+        <RegisterClientModal
+          isOpen={isClientModalOpen}
+          onClose={closeClientModal}
+          onRegisterSuccess={handleClientUpdateSuccess}
+          client={client}
+        />
+      </PetsModal>
     </div>
   );
 };
 
 export default CreatePetPage;
+
+
+
+
+

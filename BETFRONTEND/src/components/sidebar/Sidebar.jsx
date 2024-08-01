@@ -49,12 +49,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <span className={`ml-4 transition-opacity duration-300 ${!isOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>Certificado Médico</span>
             </Link>
           </li>
-          <li className="mb-8 flex items-center">
-            <Link to="/vacunacion" className="flex items-center text-lg">
-              <FaSyringe className="text-2xl" />
-              <span className={`ml-4 transition-opacity duration-300 ${!isOpen ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>Vacunación</span>
-            </Link>
-          </li>
           {user.role_id === 1 && (
             <li className="mb-8 flex items-center">
               <Link to="/admin" className="flex items-center text-lg">

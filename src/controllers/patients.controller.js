@@ -5,7 +5,7 @@ import { createPatientSchema, updatePatientSchema } from "../schemas/patient.sch
 export const getAllPatients = async (req, res, next) => {
   try {
     const result = await pool.query(`
-      SELECT p.id, p.name, p.breed, p.species, p.weight, p.birth_date, p.color, p.size, p.reproductive_status, p.client_id, c.full_name as client_name
+      SELECT p.id, p.name, p.breed, p.species, p.weight, p.birth_date, p.color, p.size, p.reproductive_status, p.client_id, p.gender, c.full_name as client_name
       FROM patients p
       LEFT JOIN clients c ON p.client_id = c.id
     `);
@@ -20,7 +20,7 @@ export const getPatient = async (req, res, next) => {
   try {
     const { patientId } = req.params;
     const result = await pool.query(`
-      SELECT p.id, p.name, p.breed, p.species, p.weight, p.birth_date, p.color, p.size, p.reproductive_status, p.client_id, c.full_name as client_name
+      SELECT p.id, p.name, p.breed, p.species, p.weight, p.birth_date, p.color, p.size, p.reproductive_status, p.client_id, p.gender, c.full_name as client_name
       FROM patients p
       LEFT JOIN clients c ON p.client_id = c.id
       WHERE p.id = $1
@@ -40,13 +40,13 @@ export const getPatient = async (req, res, next) => {
 export const createPatient = async (req, res, next) => {
   try {
     const validatedData = createPatientSchema.parse(req.body);
-    const { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id } = validatedData;
+    const { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender } = validatedData;
 
-    console.log('Datos recibidos del paciente:', { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id });
+    console.log('Datos recibidos del paciente:', { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender });
 
     const result = await pool.query(
-      "INSERT INTO patients (name, breed, species, weight, birth_date, color, size, reproductive_status, client_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-      [name, breed, species, weight, birth_date, color, size, reproductive_status, client_id]
+      "INSERT INTO patients (name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+      [name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender]
     );
 
     res.status(201).json(result.rows[0]);
@@ -60,11 +60,11 @@ export const updatePatient = async (req, res, next) => {
   try {
     const { patientId } = req.params;
     const validatedData = updatePatientSchema.parse(req.body);
-    const { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id } = validatedData;
+    const { name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender } = validatedData;
 
     await pool.query(
-      "UPDATE patients SET name = $1, breed = $2, species = $3, weight = $4, birth_date = $5, color = $6, size = $7, reproductive_status = $8, client_id = $9 WHERE id = $10",
-      [name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, patientId]
+      "UPDATE patients SET name = $1, breed = $2, species = $3, weight = $4, birth_date = $5, color = $6, size = $7, reproductive_status = $8, client_id = $9, gender = $10 WHERE id = $11",
+      [name, breed, species, weight, birth_date, color, size, reproductive_status, client_id, gender, patientId]
     );
 
     res.json({ message: 'Paciente actualizado exitosamente.' });

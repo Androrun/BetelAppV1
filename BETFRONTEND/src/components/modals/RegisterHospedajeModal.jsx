@@ -9,7 +9,6 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
     client_id: '',
     start_date: '',
     end_date: '',
-    cost: '',
     notes: '',
   };
 
@@ -35,17 +34,16 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
   useEffect(() => {
     if (isOpen && clientsLoaded && patientsLoaded) {
       if (hospedaje) {
-        const selectedClient = clients.find(client => client.id === hospedaje.client_id);
+        const selectedClient = clients.find(client => client.client_id === hospedaje.client_id);
         const selectedPatient = patients.find(patient => patient.id === hospedaje.patient_id);
-        const clientSearchTerm = selectedClient ? `${selectedClient.name} (${selectedClient.id})` : '';
+        const clientSearchTerm = selectedClient ? `${selectedClient.client_name} (${selectedClient.client_id})` : '';
         const patientSearchTerm = selectedPatient ? `${selectedPatient.name} (${selectedPatient.id})` : '';
 
         setFormData({
           patient_id: hospedaje.patient_id,
           client_id: hospedaje.client_id,
-          start_date: new Date(hospedaje.start_date).toISOString().split('T')[0],
-          end_date: new Date(hospedaje.end_date).toISOString().split('T')[0],
-          cost: hospedaje.cost,
+          start_date: new Date(hospedaje.start_date).toISOString().slice(0, -1),
+          end_date: new Date(hospedaje.end_date).toISOString().slice(0, -1),
           notes: hospedaje.notes,
         });
         setSearchClientTerm(clientSearchTerm);
@@ -61,7 +59,7 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
   useEffect(() => {
     if (searchClientTerm && !hospedaje) {
       const filtered = clients.filter(client =>
-        `${client.name} ${client.id}`.toLowerCase().includes(searchClientTerm.toLowerCase())
+        `${client.client_name} ${client.client_id}`.toLowerCase().includes(searchClientTerm.toLowerCase())
       );
       setFilteredClients(filtered);
     } else {
@@ -70,15 +68,15 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
   }, [searchClientTerm, clients, hospedaje]);
 
   useEffect(() => {
-    if (searchPatientTerm && !hospedaje) {
+    if (searchPatientTerm && formData.client_id) {
       const filtered = patients.filter(patient =>
-        `${patient.name} ${patient.id}`.toLowerCase().includes(searchPatientTerm.toLowerCase())
+        patient.client_id === formData.client_id && `${patient.name} ${patient.id}`.toLowerCase().includes(searchPatientTerm.toLowerCase())
       );
       setFilteredPatients(filtered);
     } else {
       setFilteredPatients([]);
     }
-  }, [searchPatientTerm, patients, hospedaje]);
+  }, [searchPatientTerm, formData.client_id, patients, hospedaje]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,9 +112,10 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
   const handleSelectClient = (client) => {
     setFormData((prevData) => ({
       ...prevData,
-      client_id: client.id,
+      client_id: client.client_id,
+      patient_id: ''
     }));
-    setSearchClientTerm(`${client.name} (${client.id})`);
+    setSearchClientTerm(`${client.client_name} (${client.client_id})`);
     setFilteredClients([]);
   };
 
@@ -150,11 +149,11 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
               <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 max-h-48 overflow-y-auto w-full">
                 {filteredClients.map(client => (
                   <div
-                    key={client.id}
+                    key={client.client_id}
                     className="p-2 hover:bg-gray-200 cursor-pointer"
                     onClick={() => handleSelectClient(client)}
                   >
-                    {`${client.name} (${client.id})`}
+                    {`${client.client_name} (${client.client_id})`}
                   </div>
                 ))}
               </div>
@@ -208,28 +207,15 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-gray-700">Costo</label>
-              <input
-                type="number"
-                name="cost"
-                value={formData.cost}
-                onChange={handleChange}
-                className="border border-gray-300 rounded px-4 py-2 w-full"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700">Notas</label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                className="border border-gray-300 rounded px-4 py-2 w-full"
-                rows="3"
-              ></textarea>
-            </div>
+          <div className="mb-4">
+            <label className="block text-gray-700">Notas</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              className="border border-gray-300 rounded px-4 py-2 w-full"
+              rows="3"
+            ></textarea>
           </div>
           <div className="flex justify-end">
             <button
@@ -253,6 +239,9 @@ const RegisterHospedajeModal = ({ isOpen, onClose, onRegisterSuccess, hospedaje 
 };
 
 export default RegisterHospedajeModal;
+
+
+
 
 
 

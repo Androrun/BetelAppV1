@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPatientRequest, getClientRequest, getAllPatientsRequest } from '../api/patients.api';
 import { FaPrint } from 'react-icons/fa';
+import { AuthContext } from '../context/AuthContext';
 
 const CertificadoMedicoPage = () => {
+  const { user } = useContext(AuthContext);
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState(null);
@@ -26,21 +28,25 @@ const CertificadoMedicoPage = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedPatientId) {
-      const fetchPetAndOwner = async () => {
+    const fetchPetAndOwner = async () => {
+      if (selectedPatientId) {
         try {
           const petResponse = await getPatientRequest(selectedPatientId);
           setPet(petResponse.data);
 
-          const ownerResponse = await getClientRequest(petResponse.data.client_id);
-          setOwner(ownerResponse.data);
+          if (petResponse.data.client_id) {
+            const ownerResponse = await getClientRequest(petResponse.data.client_id);
+            setOwner(ownerResponse.data);
+          } else {
+            setOwner(null);
+          }
         } catch (error) {
           console.error('Error obteniendo la mascota o el propietario:', error);
         }
-      };
+      }
+    };
 
-      fetchPetAndOwner();
-    }
+    fetchPetAndOwner();
   }, [selectedPatientId]);
 
   useEffect(() => {
@@ -91,7 +97,7 @@ const CertificadoMedicoPage = () => {
                   onClick={() => handleSelectPatient(patient.id)}
                 >
                   <span className="block truncate">
-                    {patient.name} - {patient.owner ? patient.owner.full_name : 'Sin propietario'}
+                    {patient.name} - {patient.client_name || 'Sin propietario'}
                   </span>
                 </li>
               ))}
@@ -105,20 +111,15 @@ const CertificadoMedicoPage = () => {
       ) : selectedPatientId && pet && owner ? (
         <>
           <div className="text-center mb-4">
-            <img
-              src="https://via.placeholder.com/150" // Reemplaza con la URL de la imagen del perfil de la mascota
-              alt="Perfil de la Mascota"
-              className="w-24 h-24 rounded-full mx-auto"
-            />
             <h2 className="text-2xl font-bold">HISTORIA CLÍNICA NO. 1</h2>
-            <h3 className="text-xl">Certificado Vacunación</h3>
+            <h3 className="text-xl">Certificado de Salud</h3>
             <p>{formatDate(new Date())}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <h3 className="font-bold">Datos del propietario</h3>
-              <p><strong>Nombre:</strong> {owner.full_name}</p>
+              <p><strong>Nombre:</strong> {owner.client_name}</p>
               <p><strong>Cédula:</strong> {owner.cedula}</p>
               <p><strong>Celular:</strong> {owner.phone}</p>
               <p><strong>Correo:</strong> <a href={`mailto:${owner.email}`} className="text-blue-500">{owner.email}</a></p>
@@ -132,42 +133,18 @@ const CertificadoMedicoPage = () => {
               <p><strong>Edad:</strong> {formatDate(pet.birth_date)}</p>
               <p><strong>Peso:</strong> {pet.weight} kg</p>
               <p><strong>Color:</strong> {pet.color}</p>
-              <p><strong>Sexo:</strong> {pet.gender}</p>
+              <p><strong>Sexo:</strong> {pet.gender || 'No especificado'}</p>
             </div>
           </div>
 
           <div className="mb-4">
-            <h3 className="font-bold">Datos de vacunación e inmunización</h3>
-            <table className="min-w-full border-collapse border border-gray-400">
-              <thead>
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2">Fecha</th>
-                  <th className="border border-gray-300 px-4 py-2">Medicamento</th>
-                  <th className="border border-gray-300 px-4 py-2">Lote</th>
-                  <th className="border border-gray-300 px-4 py-2">Dosis</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pet.vaccinations && pet.vaccinations.map((vacuna) => (
-                  <tr key={vacuna.id}>
-                    <td className="border border-gray-300 px-4 py-2">{formatDate(vacuna.date)}</td>
-                    <td className="border border-gray-300 px-4 py-2">{vacuna.medicine}</td>
-                    <td className="border border-gray-300 px-4 py-2">{vacuna.lot}</td>
-                    <td className="border border-gray-300 px-4 py-2">{vacuna.dose}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mb-4">
-            <p>El paciente examinado se encuentra en buen estado de salud y su condición le permite viajar sin restricción al no presentar ningún tipo de enfermedad infectocontagiosa. Ni está infestado con gusano barrenador del ganado bovino (Cochliomyia hominivorax).</p>
-            <p>Según el examen, la mascota está libre de cualquier enfermedad transmisible, contagiosa o infecciosa. La mascota no parece estar clínicamente enferma por infestación parasitaria al momento del examen físico. Tampoco está infestada con gusano barrenador del ganado bovino (Cochliomyia hominivorax).</p>
+            <p>El paciente examinado se encuentra en buen estado de salud y su condición le permite viajar sin restricción al no presentar ningún tipo de enfermedad infectocontagiosa. Tampoco está infestado con gusano barrenador del ganado bovino (Cochliomyia hominivorax).</p>
+            <p>Según el examen, la mascota está libre de cualquier enfermedad transmisible, contagiosa o infecciosa. La mascota no parece estar clínicamente enferma por infestación parasitaria al momento del examen físico.</p>
           </div>
 
           <div className="mb-4 text-center">
             <p>_______________________________</p>
-            <p>Veterinario</p>
+            <p>{user ? user.name : 'Veterinario'}</p>
             <p>Tarjeta Profesional: No registra</p>
           </div>
 
@@ -194,6 +171,11 @@ const CertificadoMedicoPage = () => {
 };
 
 export default CertificadoMedicoPage;
+
+
+
+
+
 
 
 
