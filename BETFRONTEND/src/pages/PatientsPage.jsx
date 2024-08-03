@@ -107,12 +107,7 @@ const PatientsPage = () => {
     <ContainerPatient className="w-full p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Lista de Pacientes</h1>
-        <button
-          onClick={() => openModal()}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"
-        >
-          <FaPlus className="mr-2" /> Registrar Paciente
-        </button>
+        
       </div>
       <div className="bg-white shadow-md rounded-lg p-4 w-full">
         <div className="flex justify-between items-center mb-4">
