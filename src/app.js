@@ -43,12 +43,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000; // Railway proporcionará el puerto correcto
-const HOST = '0.0.0.0';
+const PORT = process.env.PORT || 3001;
 
-app.listen(PORT, HOST, () => {
-    console.log(`Server running on http://${HOST}:${PORT}`);
-  
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 export default app;
