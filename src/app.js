@@ -14,12 +14,21 @@ import { isAuth, isAdmin, isVeterinarian, isAdminOrVeterinarian } from "./middle
 
 const app = express();
 
-// Configura CORS para permitir todos los orígenes temporalmente
+// Configura CORS
+const allowedOrigins = [
+  'http://localhost:5173', // URL de desarrollo local
+  'https://betel-app-v1.vercel.app/', // URL de producción en Vercel
+];
+
 app.use(cors({
-  origin: '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 
 // Middlewares
@@ -44,4 +53,5 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
 
