@@ -16,7 +16,7 @@ const app = express();
 
 // Configura CORS para permitir todos los orígenes temporalmente
 app.use(cors({
-  origin: '*', // Permite todos los orígenes
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
@@ -44,3 +44,4 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
