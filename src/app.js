@@ -2,9 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import cors from 'cors';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; // Importar dotenv
 
-dotenv.config();
+dotenv.config(); // Cargar las variables de entorno
 
 import authRoutes from "./routes/auth.routes.js";
 import clientRoutes from "./routes/client.routes.js"; 
@@ -38,8 +38,8 @@ app.use(cors({
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   next();
 });
 
@@ -62,6 +62,7 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
 
 
 
