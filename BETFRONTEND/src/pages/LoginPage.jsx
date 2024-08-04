@@ -1,7 +1,10 @@
 import { Card, Input, Button } from "../components/ui";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axios from 'axios'; // Asegúrate de importar axios
 import { useAuth } from "../context/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL; // Usa la variable de entorno para la URL de la API
 
 function LoginPage() {
   const {
@@ -13,9 +16,13 @@ function LoginPage() {
   const navigate = useNavigate();
 
   const onSubmit = handleSubmit(async (data) => {
-    const user = await signin(data);
-    if (user) {
+    try {
+      const response = await axios.post(`${API_URL}/api/login`, { email: data.email, password: data.password });
+      const user = response.data;
+      console.log('Login successful', user);
       navigate("/profile");
+    } catch (error) {
+      console.error('Login failed', error);
     }
   });
 
@@ -95,3 +102,4 @@ function LoginPage() {
 }
 
 export default LoginPage;
+
