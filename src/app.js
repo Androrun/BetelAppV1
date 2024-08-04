@@ -20,6 +20,7 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'betel-app-v1.vercel.app',
   'https://betelappv1-production.up.railway.app'
 ];
 
@@ -59,6 +60,12 @@ app.use((err, req, res, next) => {
     status: "error",
     message: err.message,
   });
+});
+
+// Usar el puerto de la variable de entorno o el puerto 8080 por defecto
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 export default app;
