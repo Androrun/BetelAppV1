@@ -43,7 +43,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000; // Cambiar puerto a 3000
+// Asegurarse de que el puerto esté definido en las variables de entorno
+const PORT = process.env.PORT;
+
+if (!PORT) {
+  throw new Error("El puerto no está definido. Asegúrate de que la variable de entorno PORT esté configurada.");
+}
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
