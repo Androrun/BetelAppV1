@@ -17,7 +17,8 @@ const app = express();
 // Configura CORS
 const allowedOrigins = [
   'http://localhost:5173', // URL de desarrollo local
-  'https://betel-app-v1-cjho32hb1-androruns-projects.vercel.app' // URL de producción en Vercel
+  'https://betel-app-v1-cjho32hb1-androruns-projects.vercel.app', // URL de producción en Vercel
+  'https://betel-app-v1-1twkzjp48-androruns-projects.vercel.app'
 ];
 
 app.use(cors({
