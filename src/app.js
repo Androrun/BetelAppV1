@@ -16,7 +16,7 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://betel-app-v1.vercel.app'
+  'https://betel-app-v1.vercel.app/api'
 ];
 
 app.use(cors({
