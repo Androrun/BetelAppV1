@@ -14,10 +14,9 @@ import { isAuth, isAdmin, isVeterinarian, isAdminOrVeterinarian } from "./middle
 
 const app = express();
 
-// Configura CORS
 const allowedOrigins = [
-  'http://localhost:5173', // URL de desarrollo local
-  'https://betel-app-v1.vercel.app/', // URL de producción en Vercel
+  'http://localhost:5173',
+  'https://betel-app-v1.vercel.app'
 ];
 
 app.use(cors({
@@ -28,20 +27,26 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
-// Middlewares
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+  next();
+});
+
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Rutas públicas
 app.get("/", (req, res) => res.json({ message: "Welcome to my API" }));
 app.use("/api", authRoutes);
 
-// Rutas protegidas
 app.use("/api/admin", isAuth, isAdmin, adminRoutes);
 app.use("/api/veterinario", isAuth, isAdminOrVeterinarian, clientRoutes, patientRoutes, hospitalizationRoutes, hospedajeRoutes); 
 
@@ -53,5 +58,6 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
 
 
