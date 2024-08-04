@@ -1,5 +1,6 @@
+// src/App.jsx
 import React, { useState } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { ClientsProvider } from './context/ClientsContext';
 import { UserProvider } from './context/UserContext';
@@ -46,6 +47,7 @@ const App = () => {
           <HospedajeProvider>
             <Routes>
               <Route element={<PublicLayout />}>
+                <Route path="/" element={<Navigate to="/login" />} />  {/* Redirige la ruta principal a la página de login */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
               </Route>
@@ -118,3 +120,4 @@ const ProtectedLayout = ({ isAuth, toggleSidebar, sidebarOpen }) => (
 );
 
 export default App;
+
