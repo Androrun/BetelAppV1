@@ -1,9 +1,10 @@
-// app.js
 import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+dotenv.config();
 
 import authRoutes from "./routes/auth.routes.js";
 import clientRoutes from "./routes/client.routes.js"; 
@@ -13,9 +14,7 @@ import hospitalizationRoutes from "./routes/hospitalization.routes.js";
 import hospedajeRoutes from "./routes/hospedaje.routes.js"; 
 
 import { isAuth, isAdmin, isVeterinarian, isAdminOrVeterinarian } from "./middlewares/auth.middleware.js";
-import { pool } from "./db.js"; // Asegúrate de importar la configuración de la DB
-
-dotenv.config();
+import { pool } from "./db.js";
 
 const app = express();
 
@@ -63,6 +62,7 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
 
 
 
