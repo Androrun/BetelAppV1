@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import cors from 'cors';
+import dotenv from 'dotenv'; // Importar dotenv
 
 import authRoutes from "./routes/auth.routes.js";
 import clientRoutes from "./routes/client.routes.js"; 
@@ -11,12 +12,16 @@ import hospitalizationRoutes from "./routes/hospitalization.routes.js";
 import hospedajeRoutes from "./routes/hospedaje.routes.js"; 
 
 import { isAuth, isAdmin, isVeterinarian, isAdminOrVeterinarian } from "./middlewares/auth.middleware.js";
+import pool from "./src/config/dbConfig.js"; // Asegúrate de importar la configuración de la DB
+
+// Cargar las variables de entorno
+dotenv.config();
 
 const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://betel-app-v1.vercel.app/api'
+  'https://betelappv1-production.up.railway.app'
 ];
 
 app.use(cors({
