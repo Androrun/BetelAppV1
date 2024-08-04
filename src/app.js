@@ -18,31 +18,12 @@ import { pool } from "./db.js";
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:5173',
-  'betel-app-v1.vercel.app',
-  'https://betelappv1-production.up.railway.app'
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*', // Permitir todos los orígenes
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  next();
-});
 
 app.use(morgan("dev"));
 app.use(cookieParser());
@@ -62,13 +43,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Usar el puerto de la variable de entorno o el puerto 8080 por defecto
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
 export default app;
+
 
 
 
